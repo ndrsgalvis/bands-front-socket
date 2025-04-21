@@ -1,11 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
+import { SocketContext } from "../context/SocketContext";
 
-const BandList = ({ data, votar, removeBand, changeBandName }) => {
-  const [bands, setBands] = useState(data);
+const BandList = () => {
+  const { socket } = useContext(SocketContext);
+  const [bands, setBands] = useState([]);
 
   useEffect(() => {
-    setBands(data);
-  }, [data]);
+    socket.on("current-bands", (bands) => {
+      setBands(bands);
+    });
+
+    return () => socket.off("current-bands");
+  }, [socket]);
 
   const changeName = (event, id) => {
     const newName = event.target.value;
@@ -22,7 +28,15 @@ const BandList = ({ data, votar, removeBand, changeBandName }) => {
   };
 
   const onBlur = (id, name) => {
-    changeBandName({ id, name });
+    socket.emit("change-name-band", { id, name });
+  };
+
+  const votar = (id) => {
+    socket.emit("votar-band", id);
+  };
+
+  const removeBand = (id) => {
+    socket.emit("remove-band", id);
   };
 
   const crearRows = () => {
